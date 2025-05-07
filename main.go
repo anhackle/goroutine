@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 	"time"
 )
 
-func sendRequest() {
+func sendRequest(wg *sync.WaitGroup) {
+	defer wg.Done()
 	req, err := http.NewRequest("GET", "http://testasp.vulnweb.com/", nil)
 	if err != nil {
 		panic(err)
@@ -33,9 +35,11 @@ func main() {
 	// Target: Send multiple requests to a server
 	// sequentially vs simultaneously
 	start := time.Now()
+	var wg sync.WaitGroup
 	for i := 0; i < 5; i++ {
-		sendRequest()
+		wg.Add(1)
+		go sendRequest(&wg)
 	}
-
+	wg.Wait()
 	fmt.Println("Sequential time taken: ", time.Since(start))
 }
